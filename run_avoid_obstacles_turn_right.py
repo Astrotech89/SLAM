@@ -46,6 +46,7 @@ import numpy as np
 
 ###########
 ###########
+
 threshold= 0.7
 def loop(agent):
 
@@ -56,15 +57,20 @@ def loop(agent):
     # Example: 
     #agent.change_velocity([1, 0])
     
+    # start moving
     agent.change_velocity([5,5])
+    # get data from the lidar
     data = agent.read_lidars()
-
+    
+    # check surroundings and turn right if something too close
     #print(data[125:145])
     for i in range(45,226):
         #print (data[i])
         if data[i]<threshold:
            agent.change_velocity([1,-1])
            
+
+# ignore everything below 
 
 #    differences = []
  #   for angle in range(269):
