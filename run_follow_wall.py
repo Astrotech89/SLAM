@@ -47,8 +47,9 @@ import numpy as np
 ###########
 ###########
 
-def check_stuck(agent.position_history):
-   return agent.position_history[0:] == agent.position_history[:-1]
+def check_stuck(agent):
+	pos = agent.position_history
+	return pos[0:] == pos[:-1]
 
 def random():
    agent.change_velocity([1,-1])	
@@ -92,7 +93,7 @@ def loop(agent,threshold):
 		   time.sleep(2)
   
 	#free yourself if you get stuck  
-	a=check_stuck(agent.position_history):
+	a=check_stuck(agent.position_history)
 	if a:
 		agent.change_velocity([-2,-2])	
 		time.sleep(1) 
