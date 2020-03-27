@@ -48,7 +48,7 @@ import numpy as np
 ###########
 
 def check_stuck(agent):
-	pos = agent.position_history
+	pos = agent.position_history()
 	return pos[0:] == pos[:-1]
 
 def random():
@@ -67,18 +67,20 @@ def loop(agent,threshold):
 	#start moving and reading the lidars 
 	agent.change_velocity([3,3])
 	data = agent.read_lidars()
+
+	# if data[]
 	
 	#if obstacle on the right, turn left
-	for i in range(45,135):
-		#print(data[i])
-		if data[i]<threshold:
+	#Right now this if statment won't work
+	if data[45:135] < threshold:
 		   agent.change_velocity([-1,1])
-	
 	#if obstacle on the left, turn right
-	for i in range(136,226):
+	# for i in range(136,226):
 		#print(data[i])
-		if data[i]<threshold:
-		   agent.change_velocity([1,-1])
+		# if data[i]<threshold:
+	#This if statement also won't work
+	if data[136:226] < threshold:
+		agent.change_velocity([1,-1])
 
 	#find and follow a wall      
 	for i in range(20,90):
@@ -95,8 +97,8 @@ def loop(agent,threshold):
 		   time.sleep(2)
   
 	#free yourself if you get stuck  
-	a=check_stuck(agent)
-	if a:
+	# a=check_stuck(agent)
+	if check_stuck(agent):
 		agent.change_velocity([-2,-2])	
 		time.sleep(1) 
 		agent.change_velocity([1,-1])
