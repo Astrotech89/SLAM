@@ -104,7 +104,7 @@ def loop(agent,threshold):
 
 	#do a random move to not get stuck around an "island"
 	j=j+1
-	if j=10000:
+	if j == 10000:
 		random()
 		j=0
 
