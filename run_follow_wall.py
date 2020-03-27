@@ -58,9 +58,11 @@ def random():
    time.sleep(2)          
 
 threshold=0.7
+global j
 j=0
 
 def loop(agent,threshold):
+	global j
 	
 	#start moving and reading the lidars 
 	agent.change_velocity([3,3])
@@ -93,7 +95,7 @@ def loop(agent,threshold):
 		   time.sleep(2)
   
 	#free yourself if you get stuck  
-	a=check_stuck(agent.position_history)
+	a=check_stuck(agent)
 	if a:
 		agent.change_velocity([-2,-2])	
 		time.sleep(1) 
