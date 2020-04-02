@@ -103,7 +103,7 @@ def loop(agent):
 	lower_threshold = 2 # lower threshold for the distance difference between the center and the edge of the cone 
 	upper_threshold = 9 # lower threshold for the distance difference between the center and the edge of the cone 
 	counter = 1
-
+	print ("Searching for target\nBZZZ")
 	agent.change_velocity([0.2,-0.2]) # start rotating
 
 	while flag_rotate: #While condition is true
@@ -127,7 +127,7 @@ def loop(agent):
 				if lower_threshold < max_distance-right_distance < upper_threshold:
 					if lower_threshold < max_distance-left_distance < upper_threshold:
 					
-						print("locked")
+						print("Target Locked")
 						time.sleep(2.15)
 						agent.change_velocity([0,0])
 						print("left edge of cone index: ", data.index(data[lower_boundary_index]))
