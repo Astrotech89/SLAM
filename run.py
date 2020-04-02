@@ -87,7 +87,7 @@ def reverse(agent):
 
 	
 def loop(agent):
-	count_circle = 980000
+	count_circle = 980000 #amount of counts for a full circle
 	
 	# numbers that worked:
 	# lower_threshold = 2
@@ -99,61 +99,47 @@ def loop(agent):
 	data = agent.read_lidars()
 	flag_rotate = True
 	flag_move = False
-	lower_threshold = 2
-	upper_threshold = 9
-	cone_size = 45 
-	
-	agent.change_velocity([0.2,-0.2])
+	cone_size = 45 # angular size of the cone in degrees
+	lower_threshold = 2 # lower threshold for the distance difference between the center and the edge of the cone 
+	upper_threshold = 9 # lower threshold for the distance difference between the center and the edge of the cone 
 	counter = 1
 
-	#While condition is true
-	while flag_rotate:
+	agent.change_velocity([0.2,-0.2]) # start rotating
+
+	while flag_rotate: #While condition is true
 
 		counter += 1
-		
-
 		data = agent.read_lidars()
-		# pos = agent.position_history
 		
-		
-		# min_distance_index = data.index(min(data))
+		# Find the indices of the center (maximum value of the data) and the edges of the cone
 		max_distance_index = data.index(max(data))
 		upper_boundary_index = max_distance_index + cone_size
 		lower_boundary_index = max_distance_index - cone_size
 
+		# Find the distance for the center and the edges of the cone
 		if lower_boundary_index>0 and upper_boundary_index < 270:
 			left_distance = data[lower_boundary_index]
 			max_distance = data[max_distance_index]
 			right_distance = data[upper_boundary_index]
-			# print("\n", max_distance - right_distance)
-			# print(max_distance - left_distance)
-			# print(upper_boundary_index)
-			# print(agent.position_history)
-			# print(counter)
 
-
-			
-			if max_distance_index > 133 and max_distance_index < 137:
-				# if max_distance-right_distance in range(lower_threshold, upper_threshold):
+			# if the maximum distance is at the center of the FOV and the distance difference between the center and the edges of the cone are within the thresholds 
+			if 133 < max_distance_index < 137:
 				if lower_threshold < max_distance-right_distance < upper_threshold:
-				# if max_distance-right_distance > lower_threshold and max_distance-right_distance < upper_threshold:
-					print("nai1")
-					# if max_distance-left_distance in range(lower_threshold, upper_threshold):
 					if lower_threshold < max_distance-left_distance < upper_threshold:
-					# if max_distance-left_distance > lower_threshold and max_distance-left_distance < upper_threshold:
 					
+						print("locked")
 						time.sleep(2.15)
 						agent.change_velocity([0,0])
-						print(data.index(data[lower_boundary_index]))
-						print(data.index(data[max_distance_index]))
-						print(data.index(data[upper_boundary_index]))
+						print("left edge of cone index: ", data.index(data[lower_boundary_index]))
+						print("center of the cone index: ", data.index(data[max_distance_index]))
+						print("right edge of cone index: ", data.index(data[upper_boundary_index]))
 						
-						flag_rotate = False
-						flag_move = True
+						flag_rotate = False # stop the robot from rotating
+						flag_move = True # start the next while
 
 		#If robot has completed a full circle without moving.  Counts determined by experimentation
 		if counter >= count_circle * 1:
-			print('No Detection')
+			print('No Detection, im dizzy.\nLets wiggle!')
 			got_stuck_spin(agent)
 			counter = 1 #Resets counter
 			flag_move = False #Resets loop
@@ -164,30 +150,31 @@ def loop(agent):
 	agent.change_velocity([7,7])
 	counter = 1
 	# middle_step = 0
+
 	#While tuple is true
+	# The robot starts moving forward until it sees an obstacle at a distance less than 2 units directly in front of it 
 	while flag_move:
 		counter += 1
 		data = agent.read_lidars()
 		max_distance_index = data.index(max(data))
 		max_distance = data[max_distance_index]
 
-		# pos = 
 		#Hit wall condition
 		if data[135] < 0.35:
-			print('Hit Wall')
+			print('Hit a Wall.\n AAAH PANIC!!!')
 			got_stuck_spin(agent)
-			flag_move = False
-			
+			flag_move = False # Stops the robot
 
-		#Run on condition aka it's hit something and isn't moving
+		# If it gets stuck for too long without an obstacle directly in front of it
 		if counter >= 300000:
-			print('Run on condition')
+			print('Nothing to see here, Go Back!')
 			reverse(agent)
-			flag_move = False
+			flag_move = False # Stops the robot
+
 		#Roughly middle of the room
 		if data[135] < 2:
-			print("eftasa")
-			flag_move = False
+			print("Obstacle Detected. BEEP BEEP!")
+			flag_move = False # Stops the robot
 
 	
 ##########
