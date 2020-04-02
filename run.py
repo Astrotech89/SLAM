@@ -51,11 +51,10 @@ import matplotlib.pyplot as plt
 """
 
 def got_stuck_spin(agent):
-	# agent.change_velocity([-1,1])
-	# time.sleep(3)
-	# agent.change_velocity([1,1])
-	# time.sleep(3)
-	# agent.change_velocity([0,0])
+	'''
+	If called will spin the robot and find the longest free path and move in that direction 
+	for a set length of time.  May be unstable
+	'''
 
 	data = agent.read_lidars()
 	agent.change_velocity([-0.5,0.5])
@@ -68,6 +67,10 @@ def got_stuck_spin(agent):
 
 
 def reverse(agent):
+	'''
+	Simply reverses the bot then rotates it
+	'''
+
 	agent.change_velocity([-1,-1])
 	time.sleep(3)
 	agent.change_velocity([-1,1])
@@ -102,6 +105,8 @@ def loop(agent):
 	
 	agent.change_velocity([0.2,-0.2])
 	counter = 1
+
+	#While condition is true
 	while flag_rotate:
 
 		counter += 1
@@ -146,24 +151,22 @@ def loop(agent):
 						flag_rotate = False
 						flag_move = True
 
+		#If robot has completed a full circle without moving.  Counts determined by experimentation
 		if counter >= count_circle * 1:
 			print('No Detection')
 			got_stuck_spin(agent)
-			counter = 1
-			flag_move = False
-			flag_rotate = False
-	print(counter)
+			counter = 1 #Resets counter
+			flag_move = False #Resets loop
+			flag_rotate = False #Same
+	# print(counter)
 	
 	
 	agent.change_velocity([7,7])
 	counter = 1
 	# middle_step = 0
+	#While tuple is true
 	while flag_move:
 		counter += 1
-		# print(counter)
-		# last_max_distance = middle_step
-		# print(agent.position_history)
-		# print(agent.current_speed_API)
 		data = agent.read_lidars()
 		max_distance_index = data.index(max(data))
 		max_distance = data[max_distance_index]
@@ -176,7 +179,7 @@ def loop(agent):
 			flag_move = False
 			
 
-		#Run on condition
+		#Run on condition aka it's hit something and isn't moving
 		if counter >= 300000:
 			print('Run on condition')
 			reverse(agent)
