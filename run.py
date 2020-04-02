@@ -51,17 +51,27 @@ import matplotlib.pyplot as plt
 """
 
 def got_stuck_spin(agent):
-	agent.change_velocity([-1,1])
-	time.sleep(1)
-	agent.change_velocity([1,1])
-	time.sleep(3)
-	agent.change_velocity([0,0])
+	# agent.change_velocity([-1,1])
+	# time.sleep(3)
+	# agent.change_velocity([1,1])
+	# time.sleep(3)
+	# agent.change_velocity([0,0])
+
+	data = agent.read_lidars()
+	agent.change_velocity([-0.5,0.5])
+
+	if data[135] == data.max():
+		agent.change_velocity([1,1])
+		time.sleep(3)
+		agent.change_velocity([0,0])
+		time.sleep(3)
+
 
 def reverse(agent):
 	agent.change_velocity([-1,-1])
 	time.sleep(3)
 	agent.change_velocity([-1,1])
-	time.sleep(0.5)
+	time.sleep(1)
 	agent.change_velocity([0,0])
 
 # def pos_hist(agent):
@@ -136,10 +146,12 @@ def loop(agent):
 						flag_rotate = False
 						flag_move = True
 
-			if counter >= count_circle * 1.5:
-				print('No Detection')
-				got_stuck_spin(agent)
-				counter = 1
+		if counter >= count_circle * 1:
+			print('No Detection')
+			got_stuck_spin(agent)
+			counter = 1
+			flag_move = False
+			flag_rotate = False
 	print(counter)
 	
 	
@@ -165,7 +177,7 @@ def loop(agent):
 			
 
 		#Run on condition
-		if counter >= 100000:
+		if counter >= 300000:
 			print('Run on condition')
 			reverse(agent)
 			flag_move = False
