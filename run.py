@@ -88,7 +88,7 @@ def reverse(agent):
 
 	
 def loop(agent):
-	count_circle = 980000/2 #amount of counts for a full circle
+	count_circle = 980000/5 #amount of counts for a full circle
 	
 	# numbers that worked:
 	# lower_threshold = 2
@@ -97,16 +97,26 @@ def loop(agent):
 	# agent.change_velocity([0.2,-0.2])
 	# time.sleep(2.15)
 
+
+	# numbers that worked:
+	# lower_threshold = 2
+	# upper_threshold = 12
+	# cone_size = 50
+	# agent.change_velocity([0.42,-0.42])
+	# time.sleep(0) # no time to sleep
+
+
+
 	data = agent.read_lidars()
 	flag_rotate = True
 	flag_move = False
 	pass_through_door_flag = False
-	cone_size =50 # angular size of the cone in degrees
+	cone_size = 50 # angular size of the cone in degrees
 	lower_threshold = 2 # lower threshold for the distance difference between the center and the edge of the cone 
 	upper_threshold = 12 # lower threshold for the distance difference between the center and the edge of the cone 
 	counter = 1
 	print ("Searching for target\nBZZZ")
-	agent.change_velocity([0.42,-0.42]) # start rotating
+	agent.change_velocity([0.25,-0.25]) # start rotating
 
 	while flag_rotate: #While condition is true
 
@@ -119,9 +129,7 @@ def loop(agent):
 		lower_boundary_index = max_distance_index - cone_size
 
 		
-		# if np.abs(data[225]-data[45]) < 0.3 and data[225] < 0.5 and data[45] < 0.5:
-		# 	print(np.abs(data[225]-data[45]))
-		if min(data) < 0.38:
+		if min(data) < 0.35:
 			flag_rotate = False
 			flag_move = True
 			print("HALP! Im stuck between doors")
@@ -133,7 +141,8 @@ def loop(agent):
 			right_distance = data[upper_boundary_index]
 
 			# if the maximum distance is at the center of the FOV and the distance difference between the center and the edges of the cone are within the thresholds 
-			if 133 < max_distance_index < 137:
+			# if 133 < max_distance_index < 137:
+			if max_distance_index == 135:
 				if lower_threshold < max_distance-right_distance < upper_threshold:
 					if lower_threshold < max_distance-left_distance < upper_threshold:
 					
@@ -148,11 +157,11 @@ def loop(agent):
 						flag_move = True # start the next while
 
 		#If robot has completed a full circle without moving.  Counts determined by experimentation
-		if counter >= count_circle * 1:
+		if counter >= count_circle:
 			print('No Detection, im dizzy.\nLets wiggle!')
-			got_stuck_spin(agent)
+			# got_stuck_spin(agent)
 			counter = 1 #Resets counter
-			flag_move = False #Resets loop
+			flag_move = True #Resets loop
 			flag_rotate = False #Same
 	# print(counter)
 	
@@ -209,7 +218,7 @@ def loop(agent):
 				print("back on track")
 
 		# Check if it passed through a door
-		if 270 - data.index(min(data)) < 270 and min(data) < 0.4 and data[270 - data.index(min(data))] < 0.55:
+		if min(data) < 0.4 and data[270 - data.index(min(data))] < 0.6 and 270 - data.index(min(data)) < 270 and counter > 1000:
 			pass_through_door_flag = True
 
 
