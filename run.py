@@ -218,7 +218,7 @@ def loop(agent):
 				print("back on track")
 
 		# Check if it passed through a door
-		if min(data) < 0.4 and data[270 - data.index(min(data))] < 0.6 and 270 - data.index(min(data)) < 270 and counter > 1000:
+		if 0 < 270 - data.index(min(data)) < 270 and min(data) < 0.4 and data[270 - data.index(min(data))] < 0.6 and counter > 1000:
 			pass_through_door_flag = True
 
 
