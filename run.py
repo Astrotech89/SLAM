@@ -86,8 +86,9 @@ def reverse(agent):
 # global counter
 # counter = 1
 
-	
+global door_counter
 def loop(agent):
+	global door_counter
 	count_circle = 980000/5 #amount of counts for a full circle
 	
 	# numbers that worked:
@@ -109,31 +110,36 @@ def loop(agent):
 	flag_rotate = True
 	flag_move = False
 	pass_through_door_flag = False
-	cone_size = 50 # angular size of the cone in degrees
-	lower_threshold = 2 # lower threshold for the distance difference between the center and the edge of the cone 
+	cone_size = 130 # angular size of the cone in degrees
+	lower_threshold = 0.1 # lower threshold for the distance difference between the center and the edge of the cone 
 	upper_threshold = 12 # lower threshold for the distance difference between the center and the edge of the cone 
 	counter = 1
 
-	data = agent.read_lidars()
-	print(data[int(len(data)/2)])
-	data = agent.read_lidars()[45: -45]
-	print(data[int(len(data)/2)])
+	data_0 = agent.read_lidars()
+	data = data_0[135-cone_size: -135+cone_size]
 	data_length = len(data)
-	print(data_length)
 
 	
 	print ("Searching for target\nBZZZ")
 	agent.change_velocity([0.25,-0.25]) # start rotating
 
 	while flag_rotate: #While condition is true
+		
 
 		counter += 1
-		data = agent.read_lidars()
+		data_0 = agent.read_lidars()
+		data = data_0[135-cone_size: -135+cone_size]
+		data_length = len(data)
+		# print("\ndata 0:", data_0[int(len(data_0)/2)])
+		# print("data:",data[int(len(data)/2)])
 		
 		# Find the indices of the center (maximum value of the data) and the edges of the cone
 		max_distance_index = data.index(max(data))
-		upper_boundary_index = max_distance_index + cone_size
-		lower_boundary_index = max_distance_index - cone_size
+		middle_index = int(data_length/2)
+		upper_boundary_index = middle_index  + cone_size
+		lower_boundary_index = middle_index  - cone_size
+		
+		# print(lower_boundary_index, upper_boundary_index)
 
 		
 		if min(data) < 0.35:
@@ -142,24 +148,39 @@ def loop(agent):
 			print("HALP! Im stuck between doors")
 
 		# Find the distance for the center and the edges of the cone
-		if lower_boundary_index>0 and upper_boundary_index < data_length:
+		if lower_boundary_index>=0 and upper_boundary_index <= data_length:
 			left_distance = data[lower_boundary_index]
 			max_distance = data[max_distance_index]
-			right_distance = data[upper_boundary_index]
+			right_distance = data[upper_boundary_index-1]
+			middle_distance = data[middle_index]
+			# print("\nright: ", max_distance-right_distance)
+			# print("\nleft: ", max_distance-left_distance)
 
 			# if the maximum distance is at the center of the FOV and the distance difference between the center and the edges of the cone are within the thresholds 
-			# if 133 < max_distance_index < 137:
-			if max_distance_index == int(int(data_length/2)):
-				if lower_threshold < max_distance-right_distance < upper_threshold:
-					if lower_threshold < max_distance-left_distance < upper_threshold:
+			# if 132 < max_distance_index < 138:
+			# print("\nright: ", max_distance-right_distance)
+			# print("left: ", max_distance-left_distance)
+			# print("max distance: ", max_distance)
+			# print("middle distance: ", data[int(int(data_length/2))])
+			if door_counter==1:
+				print("\nright: ", max_distance-right_distance)
+				print("left: ", max_distance-left_distance)
+				print("max distance: ", max_distance)
+				print("middle distance: ", middle_distance)
+					
+			if int(int(data_length/2))-1 < max_distance_index < int(int(data_length/2))+1:
+				if lower_threshold < middle_distance-right_distance < upper_threshold:
+					if lower_threshold < middle_distance-left_distance < upper_threshold:
+						print("\nright: ", max_distance-right_distance)
+						print("left: ", max_distance-left_distance)
+						print("max distance: ", max_distance)
 					
 						print("Target Locked")
-						# time.sleep(0.6)
+
+						if door_counter == 0:
+							time.sleep(1.5)
+
 						agent.change_velocity([0,0])
-						# print("left edge of cone index: ", data.index(data[lower_boundary_index]))
-						# print("center of the cone index: ", data.index(data[max_distance_index]))
-						# print("right edge of cone index: ", data.index(data[upper_boundary_index]))
-						
 						flag_rotate = False # stop the robot from rotating
 						flag_move = True # start the next while
 
@@ -206,7 +227,7 @@ def loop(agent):
 			min_distance_index = data.index(min(data))
 			min_distance = data[min_distance_index]
 
-			if int(int(data_length/4)) < min_distance_index < int(int(data_length/2)):
+			if int(int(len(data_0)/4)) < min_distance_index < int(int(len(data_0)/2)):
 				print("stuck in wall")
 				agent.change_velocity([-1,-1])
 				time.sleep(3)
@@ -215,7 +236,7 @@ def loop(agent):
 				agent.change_velocity([7,7])
 				print("back on track")
 
-			if int(int(data_length/2)) < min_distance_index < 3*int(int(data_length/4)):
+			if int(int(len(data_0)/2)) < min_distance_index < 3*int(int(len(data_0)/4)):
 				print("stuck in wall")
 				agent.change_velocity([-1,-1])
 				time.sleep(3)
@@ -230,17 +251,14 @@ def loop(agent):
 
 
 		#Roughly middle of the room
-		if data[int(int(data_length/2))] < 3:
+		if data[int(int(data_length/2))] < 2:
 			print("Obstacle Detected. BEEP BEEP!")
 			flag_move = False # Stops the robot
 
 	if pass_through_door_flag:
 		print("LOOK AT ME, I PASSED THROUGH A DOOR")
-		door_counter = 1
-		return door_counter
-	else:
-		door_counter = 0
-		return door_counter
+		door_counter += 1
+		
 
 	
 ##########
@@ -265,7 +283,7 @@ if __name__ == "__main__":
 	try:    
 		while step < settings.simulation_steps and not done:
 			# display.update()                      # Update the SLAM display
-			door_counter += loop(agent)  
+			loop(agent)  
 			print(door_counter)                         # Control loop
 			step += 1
 	except KeyboardInterrupt:
