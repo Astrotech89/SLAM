@@ -33,7 +33,7 @@ import numpy as np
 			   indicate the distance towards the closest object at a particular angle.
 			   
 			   Basic configuration of the lidar:
-			   Angle: [-135:135] Starting with the 
+			   Angle: [-int(int(data_length/2)):int(int(data_length/2))] Starting with the 
 			   leftmost lidar point -> clockwise
 
 	Agent:
@@ -60,11 +60,11 @@ def got_stuck_spin(agent):
 	data = agent.read_lidars()
 	agent.change_velocity([-0.5,0.5])
 
-	if data[135] == max(data):
-		agent.change_velocity([1,1])
-		time.sleep(3)
-		agent.change_velocity([0,0])
-		time.sleep(3)
+	# if data[int(int(data_length/2))] == max(data):
+	# 	agent.change_velocity([1,1])
+	# 	time.sleep(3)
+	# 	agent.change_velocity([0,0])
+	# 	time.sleep(3)
 
 
 def reverse(agent):
@@ -106,8 +106,6 @@ def loop(agent):
 	# time.sleep(0) # no time to sleep
 
 
-
-	data = agent.read_lidars()
 	flag_rotate = True
 	flag_move = False
 	pass_through_door_flag = False
@@ -115,6 +113,15 @@ def loop(agent):
 	lower_threshold = 2 # lower threshold for the distance difference between the center and the edge of the cone 
 	upper_threshold = 12 # lower threshold for the distance difference between the center and the edge of the cone 
 	counter = 1
+
+	data = agent.read_lidars()
+	print(data[int(len(data)/2)])
+	data = agent.read_lidars()[45: -45]
+	print(data[int(len(data)/2)])
+	data_length = len(data)
+	print(data_length)
+
+	
 	print ("Searching for target\nBZZZ")
 	agent.change_velocity([0.25,-0.25]) # start rotating
 
@@ -135,14 +142,14 @@ def loop(agent):
 			print("HALP! Im stuck between doors")
 
 		# Find the distance for the center and the edges of the cone
-		if lower_boundary_index>0 and upper_boundary_index < 270:
+		if lower_boundary_index>0 and upper_boundary_index < data_length:
 			left_distance = data[lower_boundary_index]
 			max_distance = data[max_distance_index]
 			right_distance = data[upper_boundary_index]
 
 			# if the maximum distance is at the center of the FOV and the distance difference between the center and the edges of the cone are within the thresholds 
 			# if 133 < max_distance_index < 137:
-			if max_distance_index == 135:
+			if max_distance_index == int(int(data_length/2)):
 				if lower_threshold < max_distance-right_distance < upper_threshold:
 					if lower_threshold < max_distance-left_distance < upper_threshold:
 					
@@ -182,7 +189,7 @@ def loop(agent):
 			
 
 		# # Hit wall condition
-		# if data[135] < 0.5:
+		# if data[int(int(data_length/2))] < 0.5:
 		# 	print('Hit a Wall.\n AAAH PANIC!!!')
 		# 	got_stuck_spin(agent)
 		# 	flag_move = False # Stops the robot
@@ -199,7 +206,7 @@ def loop(agent):
 			min_distance_index = data.index(min(data))
 			min_distance = data[min_distance_index]
 
-			if 70 < min_distance_index < 135:
+			if int(int(data_length/4)) < min_distance_index < int(int(data_length/2)):
 				print("stuck in wall")
 				agent.change_velocity([-1,-1])
 				time.sleep(3)
@@ -208,7 +215,7 @@ def loop(agent):
 				agent.change_velocity([7,7])
 				print("back on track")
 
-			if 135 < min_distance_index < 200:
+			if int(int(data_length/2)) < min_distance_index < 3*int(int(data_length/4)):
 				print("stuck in wall")
 				agent.change_velocity([-1,-1])
 				time.sleep(3)
@@ -218,12 +225,12 @@ def loop(agent):
 				print("back on track")
 
 		# Check if it passed through a door
-		if 0 < 270 - data.index(min(data)) < 270 and min(data) < 0.4 and data[270 - data.index(min(data))] < 0.6 and counter > 1000:
+		if 0 < data_length - data.index(min(data)) < data_length and min(data) < 0.4 and data[data_length - data.index(min(data))] < 0.6 and counter > 1000:
 			pass_through_door_flag = True
 
 
 		#Roughly middle of the room
-		if data[135] < 3:
+		if data[int(int(data_length/2))] < 3:
 			print("Obstacle Detected. BEEP BEEP!")
 			flag_move = False # Stops the robot
 
