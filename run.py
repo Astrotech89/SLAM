@@ -8,6 +8,7 @@ from src.disp   import Display
 import settings
 import time, argparse
 import matplotlib.pyplot as plt
+import numpy as np
 
 """ Motors:
 
@@ -59,7 +60,7 @@ def got_stuck_spin(agent):
 	data = agent.read_lidars()
 	agent.change_velocity([-0.5,0.5])
 
-	if data[135] == data.max():
+	if data[135] == max(data):
 		agent.change_velocity([1,1])
 		time.sleep(3)
 		agent.change_velocity([0,0])
@@ -73,7 +74,7 @@ def reverse(agent):
 
 	agent.change_velocity([-1,-1])
 	time.sleep(3)
-	agent.change_velocity([-1,1])
+	agent.change_velocity([1,-1])
 	time.sleep(1)
 	agent.change_velocity([0,0])
 
@@ -87,7 +88,7 @@ def reverse(agent):
 
 	
 def loop(agent):
-	count_circle = 980000 #amount of counts for a full circle
+	count_circle = 980000/2 #amount of counts for a full circle
 	
 	# numbers that worked:
 	# lower_threshold = 2
@@ -99,12 +100,13 @@ def loop(agent):
 	data = agent.read_lidars()
 	flag_rotate = True
 	flag_move = False
-	cone_size = 45 # angular size of the cone in degrees
+	pass_through_door_flag = False
+	cone_size =50 # angular size of the cone in degrees
 	lower_threshold = 2 # lower threshold for the distance difference between the center and the edge of the cone 
-	upper_threshold = 9 # lower threshold for the distance difference between the center and the edge of the cone 
+	upper_threshold = 12 # lower threshold for the distance difference between the center and the edge of the cone 
 	counter = 1
 	print ("Searching for target\nBZZZ")
-	agent.change_velocity([0.2,-0.2]) # start rotating
+	agent.change_velocity([0.42,-0.42]) # start rotating
 
 	while flag_rotate: #While condition is true
 
@@ -115,6 +117,14 @@ def loop(agent):
 		max_distance_index = data.index(max(data))
 		upper_boundary_index = max_distance_index + cone_size
 		lower_boundary_index = max_distance_index - cone_size
+
+		
+		# if np.abs(data[225]-data[45]) < 0.3 and data[225] < 0.5 and data[45] < 0.5:
+		# 	print(np.abs(data[225]-data[45]))
+		if min(data) < 0.38:
+			flag_rotate = False
+			flag_move = True
+			print("HALP! Im stuck between doors")
 
 		# Find the distance for the center and the edges of the cone
 		if lower_boundary_index>0 and upper_boundary_index < 270:
@@ -128,11 +138,11 @@ def loop(agent):
 					if lower_threshold < max_distance-left_distance < upper_threshold:
 					
 						print("Target Locked")
-						time.sleep(2.15)
+						# time.sleep(0.6)
 						agent.change_velocity([0,0])
-						print("left edge of cone index: ", data.index(data[lower_boundary_index]))
-						print("center of the cone index: ", data.index(data[max_distance_index]))
-						print("right edge of cone index: ", data.index(data[upper_boundary_index]))
+						# print("left edge of cone index: ", data.index(data[lower_boundary_index]))
+						# print("center of the cone index: ", data.index(data[max_distance_index]))
+						# print("right edge of cone index: ", data.index(data[upper_boundary_index]))
 						
 						flag_rotate = False # stop the robot from rotating
 						flag_move = True # start the next while
@@ -159,22 +169,62 @@ def loop(agent):
 		max_distance_index = data.index(max(data))
 		max_distance = data[max_distance_index]
 
-		#Hit wall condition
-		if data[135] < 0.35:
-			print('Hit a Wall.\n AAAH PANIC!!!')
-			got_stuck_spin(agent)
-			flag_move = False # Stops the robot
+		
+			
+
+		# # Hit wall condition
+		# if data[135] < 0.5:
+		# 	print('Hit a Wall.\n AAAH PANIC!!!')
+		# 	got_stuck_spin(agent)
+		# 	flag_move = False # Stops the robot
 
 		# If it gets stuck for too long without an obstacle directly in front of it
-		if counter >= 300000:
+		if counter >= 100000:
 			print('Nothing to see here, Go Back!')
 			reverse(agent)
 			flag_move = False # Stops the robot
 
+		# Hit wall condition
+		if min(data) < 0.33:
+			# print("stuck in wall")
+			min_distance_index = data.index(min(data))
+			min_distance = data[min_distance_index]
+
+			if 70 < min_distance_index < 135:
+				print("stuck in wall")
+				agent.change_velocity([-1,-1])
+				time.sleep(3)
+				agent.change_velocity([-1,1])
+				time.sleep(0.5)
+				agent.change_velocity([7,7])
+				print("back on track")
+
+			if 135 < min_distance_index < 200:
+				print("stuck in wall")
+				agent.change_velocity([-1,-1])
+				time.sleep(3)
+				agent.change_velocity([1,-1])
+				time.sleep(0.5)
+				agent.change_velocity([7,7])
+				print("back on track")
+
+		# Check if it passed through a door
+		if 270 - data.index(min(data)) < 270 and min(data) < 0.4 and data[270 - data.index(min(data))] < 0.55:
+			pass_through_door_flag = True
+
+
 		#Roughly middle of the room
-		if data[135] < 2:
+		if data[135] < 3:
 			print("Obstacle Detected. BEEP BEEP!")
 			flag_move = False # Stops the robot
+
+	if pass_through_door_flag:
+		print("LOOK AT ME, I PASSED THROUGH A DOOR")
+		door_counter = 1
+		return door_counter
+	else:
+		door_counter = 0
+		return door_counter
 
 	
 ##########
@@ -186,7 +236,7 @@ if __name__ == "__main__":
 	environment = VrepEnvironment(settings.SCENES + '/room_static.ttt')  # Open the file containing our scene (robot and its environment)
 	environment.connect()        # Connect python to the simulator's remote API
 	agent   = Pioneer(environment)
-	display = Display(agent, False) 
+	# display = Display(agent, False) 
 
 	print('\nDemonstration of Simultaneous Localization and Mapping using CoppeliaSim robot simulation software. \nPress "CTRL+C" to exit.\n')
 	start = time.time()
@@ -194,15 +244,17 @@ if __name__ == "__main__":
 	done  = False
 	environment.start_simulation()
 	time.sleep(1)
+	door_counter = 0
 
 	try:    
 		while step < settings.simulation_steps and not done:
-			display.update()                      # Update the SLAM display
-			loop(agent)                           # Control loop
+			# display.update()                      # Update the SLAM display
+			door_counter += loop(agent)  
+			print(door_counter)                         # Control loop
 			step += 1
 	except KeyboardInterrupt:
 		print('\n\nInterrupted! Time: {}s'.format(time.time()-start))
 		
-	display.close()
+	# display.close()
 	environment.stop_simulation()
 	environment.disconnect()
