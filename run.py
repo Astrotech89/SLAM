@@ -89,18 +89,11 @@ def reverse(agent):
 	time.sleep(1)
 	agent.change_velocity([0,0])
 
-# def pos_hist(agent):
-# 	agent.position_history() # Need something with this to help get unstuck
-# 	# yeah not sure what this is doing yet, didnt need it until now
-
-
-# global counter
-# counter = 1
 
 global door_counter
 def loop(agent):
 	global door_counter
-	count_circle = 980000/3 #amount of counts for a full circle
+	count_circle = 980000/2 #amount of counts for a full circle
 	
 	# numbers that worked:
 	# lower_threshold = 2
@@ -139,11 +132,8 @@ def loop(agent):
 
 		counter += 1
 		data_0 = agent.read_lidars()
-		# display_lidar(agent,data_0)
 		data = data_0[135-cone_size: -135+cone_size]
 		data_length = len(data)
-		# print("\ndata 0:", data_0[int(len(data_0)/2)])
-		# print("data:",data[int(len(data)/2)])
 		
 		# Find the indices of the center (maximum value of the data) and the edges of the cone
 		max_distance_index = data.index(max(data))
@@ -153,11 +143,7 @@ def loop(agent):
 		
 		# print(lower_boundary_index, upper_boundary_index)
 
-		
-		# if min(data) < 0.35:
-		# 	flag_rotate = False
-		# 	flag_move = True
-		# 	print("HALP! Im stuck between doors")
+
 
 		# Find the distance for the center and the edges of the cone
 		if lower_boundary_index>=0 and upper_boundary_index <= data_length:
@@ -165,27 +151,11 @@ def loop(agent):
 			max_distance = data[max_distance_index]
 			right_distance = data[upper_boundary_index-1]
 			middle_distance = data[middle_index]
-			# print("\nright: ", max_distance-right_distance)
-			# print("\nleft: ", max_distance-left_distance)
 
-			# if the maximum distance is at the center of the FOV and the distance difference between the center and the edges of the cone are within the thresholds 
-			# if 132 < max_distance_index < 138:
-			# print("\nright: ", max_distance-right_distance)
-			# print("left: ", max_distance-left_distance)
-			# print("max distance: ", max_distance)
-			# print("middle distance: ", data[int(int(data_length/2))])
-			# if door_counter==1:
-				# print("\nright: ", max_distance-right_distance)
-				# print("left: ", max_distance-left_distance)
-				# print("max distance: ", max_distance)
-				# print("middle distance: ", middle_distance)
-			# if int(int(data_length/2))-1 < max_distance_index < int(int(data_length/2))+1:
+
 			if lower_threshold < middle_distance-right_distance < upper_threshold:
 				if lower_threshold < middle_distance-left_distance < upper_threshold:
-					print("\nright: ", max_distance-right_distance)
-					print("left: ", max_distance-left_distance)
-					print("max distance: ", max_distance)
-				
+					
 					print("Target Locked")
 
 					if door_counter == 0:
@@ -193,7 +163,9 @@ def loop(agent):
 					if door_counter == 1:
 						time.sleep(1)
 					if door_counter == 2:
-						time.sleep(1)
+						time.sleep(0.62)
+					if door_counter ==3:
+						time.sleep(2)
 
 					agent.change_velocity([0,0])
 					flag_rotate = False # stop the robot from rotating
@@ -211,9 +183,7 @@ def loop(agent):
 	
 	agent.change_velocity([3,3])
 	counter = 1
-	# middle_step = 0
 
-	#While tuple is true
 	# The robot starts moving forward until it sees an obstacle at a distance less than 2 units directly in front of it 
 	while flag_move:
 		counter += 1
@@ -224,12 +194,6 @@ def loop(agent):
 
 		
 			
-
-		# # Hit wall condition
-		# if data[int(int(data_length/2))] < 0.5:
-		# 	print('Hit a Wall.\n AAAH PANIC!!!')
-		# 	got_stuck_spin(agent)
-		# 	flag_move = False # Stops the robot
 
 		# If it gets stuck for too long without an obstacle directly in front of it
 		if counter >= 900000:
@@ -260,6 +224,15 @@ def loop(agent):
 				agent.change_velocity([3,3])
 				print("back on track")
 
+
+
+		if counter >= 900000:
+			print('Nothing to see here, Go Back!')
+			reverse(agent)
+			flag_move = False # Stops the robot
+
+
+
 		# Check if it passed through a door
 		if 0 < len(data_0) - data_0.index(min(data_0)) < len(data_0) and min(data_0) < 0.4 and data_0[len(data_0) - data_0.index(min(data_0))] < 0.6 and counter > 1000:
 			pass_through_door_flag = True
@@ -271,8 +244,8 @@ def loop(agent):
 			flag_move = False # Stops the robot
 
 	if pass_through_door_flag:
-		print("LOOK AT ME, I PASSED THROUGH A DOOR")
 		door_counter += 1
+		print("LOOK AT ME, I PASSED THROUGH DOOR #", door_counter)
 		
 
 	
@@ -307,3 +280,5 @@ if __name__ == "__main__":
 	# display.close()
 	environment.stop_simulation()
 	environment.disconnect()
+
+
