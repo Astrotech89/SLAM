@@ -110,18 +110,18 @@ def loop(agent):
 	flag_rotate = True
 	flag_move = False
 	pass_through_door_flag = False
-	cone_size = 130 # angular size of the cone in degrees
-	lower_threshold = 0.1 # lower threshold for the distance difference between the center and the edge of the cone 
-	upper_threshold = 12 # lower threshold for the distance difference between the center and the edge of the cone 
+	cone_size = 45 # angular size of the cone in degrees
+	lower_threshold = 2 # lower threshold for the distance difference between the center and the edge of the cone 
+	upper_threshold = 9 # lower threshold for the distance difference between the center and the edge of the cone 
 	counter = 1
 
 	data_0 = agent.read_lidars()
-	data = data_0[135-cone_size: -135+cone_size]
+	data = data_0
 	data_length = len(data)
 
 	
 	print ("Searching for target\nBZZZ")
-	agent.change_velocity([0.25,-0.25]) # start rotating
+	agent.change_velocity([0.2,-0.2]) # start rotating
 
 	while flag_rotate: #While condition is true
 		
@@ -162,11 +162,11 @@ def loop(agent):
 			# print("left: ", max_distance-left_distance)
 			# print("max distance: ", max_distance)
 			# print("middle distance: ", data[int(int(data_length/2))])
-			if door_counter==1:
-				print("\nright: ", max_distance-right_distance)
-				print("left: ", max_distance-left_distance)
-				print("max distance: ", max_distance)
-				print("middle distance: ", middle_distance)
+			# if door_counter==1:
+				# print("\nright: ", max_distance-right_distance)
+				# print("left: ", max_distance-left_distance)
+				# print("max distance: ", max_distance)
+				# print("middle distance: ", middle_distance)
 					
 			if int(int(data_length/2))-1 < max_distance_index < int(int(data_length/2))+1:
 				if lower_threshold < middle_distance-right_distance < upper_threshold:
@@ -177,8 +177,11 @@ def loop(agent):
 					
 						print("Target Locked")
 
-						if door_counter == 0:
-							time.sleep(1.5)
+						# if door_counter == 0:
+						# 	time.sleep(1.5)
+						# if door_counter == 1:
+						# 	time.sleep(0.2)
+						time.sleep(2.15)
 
 						agent.change_velocity([0,0])
 						flag_rotate = False # stop the robot from rotating
@@ -202,7 +205,8 @@ def loop(agent):
 	# The robot starts moving forward until it sees an obstacle at a distance less than 2 units directly in front of it 
 	while flag_move:
 		counter += 1
-		data = agent.read_lidars()
+		data_0 = agent.read_lidars()
+		data = data_0[135-cone_size: -135+cone_size]
 		max_distance_index = data.index(max(data))
 		max_distance = data[max_distance_index]
 
@@ -224,19 +228,10 @@ def loop(agent):
 		# Hit wall condition
 		if min(data) < 0.33:
 			# print("stuck in wall")
-			min_distance_index = data.index(min(data))
-			min_distance = data[min_distance_index]
+			min_distance_index = data_0.index(min(data_0))
+			min_distance = data_0[min_distance_index]
 
 			if int(int(len(data_0)/4)) < min_distance_index < int(int(len(data_0)/2)):
-				print("stuck in wall")
-				agent.change_velocity([-1,-1])
-				time.sleep(3)
-				agent.change_velocity([-1,1])
-				time.sleep(0.5)
-				agent.change_velocity([7,7])
-				print("back on track")
-
-			if int(int(len(data_0)/2)) < min_distance_index < 3*int(int(len(data_0)/4)):
 				print("stuck in wall")
 				agent.change_velocity([-1,-1])
 				time.sleep(3)
@@ -245,13 +240,22 @@ def loop(agent):
 				agent.change_velocity([7,7])
 				print("back on track")
 
+			if int(int(len(data_0)/2)) < min_distance_index < 3*int(int(len(data_0)/4)):
+				print("stuck in wall")
+				agent.change_velocity([-1,-1])
+				time.sleep(3)
+				agent.change_velocity([-1,1])
+				time.sleep(0.5)
+				agent.change_velocity([7,7])
+				print("back on track")
+
 		# Check if it passed through a door
-		if 0 < data_length - data.index(min(data)) < data_length and min(data) < 0.4 and data[data_length - data.index(min(data))] < 0.6 and counter > 1000:
+		if 0 < len(data_0) - data_0.index(min(data_0)) < len(data_0) and min(data_0) < 0.4 and data_0[len(data_0) - data_0.index(min(data_0))] < 0.6 and counter > 1000:
 			pass_through_door_flag = True
 
 
 		#Roughly middle of the room
-		if data[int(int(data_length/2))] < 2:
+		if data[int(int(data_length/2))] < 3:
 			print("Obstacle Detected. BEEP BEEP!")
 			flag_move = False # Stops the robot
 
