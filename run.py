@@ -51,6 +51,17 @@ import numpy as np
 			   (200 by default, can be changed in settings.py)
 """
 
+def display_lidar(agent, data):
+	theta = np.deg2rad(np.arange(0,270))
+	# data = agent.read_lidars()
+	plt.clf()
+	ax = plt.subplot(111,projection='polar')
+	ax.set_theta_offset(np.deg2rad(135))
+	ax.plot(theta,data)
+	plt.show()
+
+
+
 def got_stuck_spin(agent):
 	'''
 	If called will spin the robot and find the longest free path and move in that direction 
@@ -89,7 +100,7 @@ def reverse(agent):
 global door_counter
 def loop(agent):
 	global door_counter
-	count_circle = 980000/5 #amount of counts for a full circle
+	count_circle = 980000/3 #amount of counts for a full circle
 	
 	# numbers that worked:
 	# lower_threshold = 2
@@ -110,13 +121,13 @@ def loop(agent):
 	flag_rotate = True
 	flag_move = False
 	pass_through_door_flag = False
-	cone_size = 45 # angular size of the cone in degrees
-	lower_threshold = 2 # lower threshold for the distance difference between the center and the edge of the cone 
+	cone_size = 60 # angular size of the cone in degrees
+	lower_threshold = 4 # lower threshold for the distance difference between the center and the edge of the cone 
 	upper_threshold = 9 # lower threshold for the distance difference between the center and the edge of the cone 
 	counter = 1
 
 	data_0 = agent.read_lidars()
-	data = data_0
+	data = data_0[135-cone_size: -135+cone_size]
 	data_length = len(data)
 
 	
@@ -128,6 +139,7 @@ def loop(agent):
 
 		counter += 1
 		data_0 = agent.read_lidars()
+		# display_lidar(agent,data_0)
 		data = data_0[135-cone_size: -135+cone_size]
 		data_length = len(data)
 		# print("\ndata 0:", data_0[int(len(data_0)/2)])
@@ -142,10 +154,10 @@ def loop(agent):
 		# print(lower_boundary_index, upper_boundary_index)
 
 		
-		if min(data) < 0.35:
-			flag_rotate = False
-			flag_move = True
-			print("HALP! Im stuck between doors")
+		# if min(data) < 0.35:
+		# 	flag_rotate = False
+		# 	flag_move = True
+		# 	print("HALP! Im stuck between doors")
 
 		# Find the distance for the center and the edges of the cone
 		if lower_boundary_index>=0 and upper_boundary_index <= data_length:
@@ -167,25 +179,25 @@ def loop(agent):
 				# print("left: ", max_distance-left_distance)
 				# print("max distance: ", max_distance)
 				# print("middle distance: ", middle_distance)
-					
-			if int(int(data_length/2))-1 < max_distance_index < int(int(data_length/2))+1:
-				if lower_threshold < middle_distance-right_distance < upper_threshold:
-					if lower_threshold < middle_distance-left_distance < upper_threshold:
-						print("\nright: ", max_distance-right_distance)
-						print("left: ", max_distance-left_distance)
-						print("max distance: ", max_distance)
-					
-						print("Target Locked")
+			# if int(int(data_length/2))-1 < max_distance_index < int(int(data_length/2))+1:
+			if lower_threshold < middle_distance-right_distance < upper_threshold:
+				if lower_threshold < middle_distance-left_distance < upper_threshold:
+					print("\nright: ", max_distance-right_distance)
+					print("left: ", max_distance-left_distance)
+					print("max distance: ", max_distance)
+				
+					print("Target Locked")
 
-						# if door_counter == 0:
-						# 	time.sleep(1.5)
-						# if door_counter == 1:
-						# 	time.sleep(0.2)
-						time.sleep(2.15)
+					if door_counter == 0:
+						time.sleep(1.5)
+					if door_counter == 1:
+						time.sleep(1)
+					if door_counter == 2:
+						time.sleep(1)
 
-						agent.change_velocity([0,0])
-						flag_rotate = False # stop the robot from rotating
-						flag_move = True # start the next while
+					agent.change_velocity([0,0])
+					flag_rotate = False # stop the robot from rotating
+					flag_move = True # start the next while
 
 		#If robot has completed a full circle without moving.  Counts determined by experimentation
 		if counter >= count_circle:
@@ -197,7 +209,7 @@ def loop(agent):
 	# print(counter)
 	
 	
-	agent.change_velocity([7,7])
+	agent.change_velocity([3,3])
 	counter = 1
 	# middle_step = 0
 
@@ -220,14 +232,13 @@ def loop(agent):
 		# 	flag_move = False # Stops the robot
 
 		# If it gets stuck for too long without an obstacle directly in front of it
-		if counter >= 100000:
+		if counter >= 900000:
 			print('Nothing to see here, Go Back!')
 			reverse(agent)
 			flag_move = False # Stops the robot
 
 		# Hit wall condition
 		if min(data) < 0.33:
-			# print("stuck in wall")
 			min_distance_index = data_0.index(min(data_0))
 			min_distance = data_0[min_distance_index]
 
@@ -235,18 +246,18 @@ def loop(agent):
 				print("stuck in wall")
 				agent.change_velocity([-1,-1])
 				time.sleep(3)
-				agent.change_velocity([1,-1])
+				agent.change_velocity([-1,1])
 				time.sleep(0.5)
-				agent.change_velocity([7,7])
+				agent.change_velocity([3,3])
 				print("back on track")
 
 			if int(int(len(data_0)/2)) < min_distance_index < 3*int(int(len(data_0)/4)):
 				print("stuck in wall")
 				agent.change_velocity([-1,-1])
 				time.sleep(3)
-				agent.change_velocity([-1,1])
+				agent.change_velocity([1,-1])
 				time.sleep(0.5)
-				agent.change_velocity([7,7])
+				agent.change_velocity([3,3])
 				print("back on track")
 
 		# Check if it passed through a door
