@@ -2,6 +2,11 @@
 Rachel Losacco
 s2316110
 SLAM Workshop
+Collaborators:
+	Giannis Politopoulos
+	Alex Tripsas
+	Micha Heilman
+	Stella Tsilia
 """
 
 from __future__ import print_function
